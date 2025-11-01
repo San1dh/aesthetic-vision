@@ -70,7 +70,7 @@ const Index = () => {
       {/* Header */}
       <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border">
         <div className="container mx-auto px-4 py-6">
-          <h1 className="text-5xl md:text-6xl font-bold text-center mb-6 animate-fade-in">
+          <h1 className="text-5xl md:text-6xl font-montserrat font-bold text-center mb-6 animate-fade-in">
             <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               Aesthetic Gallery
             </span>
