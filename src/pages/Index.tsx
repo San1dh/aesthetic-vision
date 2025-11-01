@@ -4,118 +4,65 @@ import { CategoryFilter } from "@/components/CategoryFilter";
 import { ImageCard } from "@/components/ImageCard";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
-import { toast } from "sonner";
+import { getMockImages, searchMockImages, type GalleryImage } from "@/data/mockImages";
 
-const UNSPLASH_ACCESS_KEY = "YOUR_ACCESS_KEY_HERE";
 const CATEGORIES = ["All", "Nature", "Architecture", "People", "Animals", "Technology"];
 
-interface UnsplashImage {
-  id: string;
-  urls: {
-    regular: string;
-    small: string;
-  };
-  alt_description: string | null;
-  user: {
-    name: string;
-    username: string;
-  };
-  likes: number;
-}
-
 const Index = () => {
-  const [images, setImages] = useState<UnsplashImage[]>([]);
+  const [images, setImages] = useState<GalleryImage[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
 
-  const fetchImages = async (query: string = "", pageNum: number = 1) => {
+  const loadImages = (query: string = "", category: string = "All", pageNum: number = 1) => {
     setLoading(true);
-    try {
-      const endpoint = query
-        ? `https://api.unsplash.com/search/photos?query=${query}&page=${pageNum}&per_page=20`
-        : `https://api.unsplash.com/photos?page=${pageNum}&per_page=20`;
-
-      const response = await fetch(endpoint, {
-        headers: {
-          Authorization: `Client-ID ${UNSPLASH_ACCESS_KEY}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch images");
+    
+    // Simulate API delay for smooth UX
+    setTimeout(() => {
+      let newImages: GalleryImage[];
+      
+      if (query) {
+        newImages = searchMockImages(query, pageNum);
+      } else if (category === "All") {
+        newImages = getMockImages("all", pageNum);
+      } else {
+        newImages = getMockImages(category, pageNum);
       }
-
-      const data = await response.json();
-      const newImages = query ? data.results : data;
 
       if (pageNum === 1) {
         setImages(newImages);
       } else {
         setImages((prev) => [...prev, ...newImages]);
       }
-    } catch (error) {
-      console.error("Error fetching images:", error);
-      toast.error("Failed to load images. Using demo mode with limited access.");
       
-      // Fallback to random photos endpoint which works without API key
-      fetchDemoImages(pageNum);
-    } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchDemoImages = async (pageNum: number = 1) => {
-    try {
-      const response = await fetch(
-        `https://api.unsplash.com/photos/random?count=20`,
-        {
-          headers: {
-            Authorization: `Client-ID ${UNSPLASH_ACCESS_KEY}`,
-          },
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        if (pageNum === 1) {
-          setImages(data);
-        } else {
-          setImages((prev) => [...prev, ...data]);
-        }
-      }
-    } catch (error) {
-      console.error("Demo mode error:", error);
-    }
+    }, 500);
   };
 
   useEffect(() => {
-    fetchImages();
+    loadImages();
   }, []);
 
   const handleSearch = () => {
     if (searchQuery.trim()) {
       setPage(1);
-      fetchImages(searchQuery, 1);
+      setActiveCategory("All");
+      loadImages(searchQuery, "All", 1);
     }
   };
 
   const handleCategoryChange = (category: string) => {
     setActiveCategory(category);
+    setSearchQuery("");
     setPage(1);
-    const query = category === "All" ? "" : category.toLowerCase();
-    fetchImages(query, 1);
-    if (query) {
-      setSearchQuery(query);
-    }
+    loadImages("", category, 1);
   };
 
   const loadMore = () => {
     const nextPage = page + 1;
     setPage(nextPage);
-    const query = activeCategory === "All" ? searchQuery : activeCategory.toLowerCase();
-    fetchImages(query, nextPage);
+    loadImages(searchQuery, activeCategory, nextPage);
   };
 
   return (
